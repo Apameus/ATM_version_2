@@ -55,7 +55,7 @@ public class CreditCardManager {
      * @param card the specific credit-card
      * @return true if the amount was added to the credit-card <b>or false if the amount was 0 or less</b>
      */
-    public Boolean deposit(Double amount, CreditCard card){
+    public Boolean deposit(CreditCard card, Double amount){
         if (amount <= 0) {
             return false;
         }

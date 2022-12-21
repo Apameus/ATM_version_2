@@ -28,6 +28,12 @@ public class PanelManager {
         loginPage = new LoginPage(this);
         accountPage = new AccountPage(this);
         depositPage = new DepositPage(this);
+        withdrawPage = new WithdrawPage(this);
+        transferPage = new TransferPage(this);
+    }
+
+    public WithdrawPage getWithdrawPage() {
+        return withdrawPage;
     }
 
     public DepositPage getDepositPage() {
@@ -50,6 +56,5 @@ public class PanelManager {
         frame.setSize(700,700);
         frame.setVisible(true);
     }
-
 
 }

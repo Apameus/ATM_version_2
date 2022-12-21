@@ -26,24 +26,31 @@ public class DepositPage {
 
         // buttons
         backButton.addActionListener(e -> {
+            clear();
             manager.showPanel(AccountPage.KEY);
         });
 
         depositButton.addActionListener(e -> {
             Double amount = Double.valueOf(amountField.getText());
 
-            if (creditCardManager.deposit(amount ,manager.getAccountPage().getCreditCard())){
-                amountField.setText("");
+            if (creditCardManager.deposit(manager.getAccountPage().getCreditCard(), amount)){
+                clear();
                 refresh(manager.getAccountPage().getCreditCard());
                 manager.getAccountPage().refresh();
             }
             else {
+                // show error
                 infoText.setForeground(Color.red);
                 infoText.setText("Invalid amount!");
                 amountField.setText("");
             }
 
         });
+    }
+
+    private void clear() {
+        amountField.setText("");
+        infoText.setText("");
     }
 
     public void refresh(CreditCard card){

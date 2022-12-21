@@ -38,6 +38,8 @@ public class AccountPage {
         });
 
         withdrawButton.addActionListener(e -> {
+            WithdrawPage withdrawPage = manager.getWithdrawPage();
+            withdrawPage.refresh(creditCard);
             manager.showPanel(WithdrawPage.KEY);
         });
 
