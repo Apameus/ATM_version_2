@@ -16,54 +16,65 @@ public class LoginPage {
     private JButton loginButton;
     private JButton registerButton;
 
+    private CreditCardManager cardManager;
+
     // constructor
     public LoginPage(PanelManager manager){
+        cardManager = new CreditCardManager();
         manager.addPanel(mainPanel, KEY);
-        String creditNumber = creditNumberField.getText();
-        String creditPin = new String(creditPinField.getPassword());
+
         // loginButton
         loginButton.addActionListener(e -> {
-            blankCheck(creditNumber, creditPin);
-            correctInfoCheck(creditNumber, creditPin, manager);
+            String creditNumber = creditNumberField.getText();
+            String creditPin = new String(creditPinField.getPassword());
+            // checks
+            if (blankCheck(creditNumber, creditPin) == true) {
+                correctInfoCheck(creditNumber, creditPin, manager);
+            }
 
         });
         // registerButton
         registerButton.addActionListener(e -> {
-            blankCheck(creditNumber, creditPin);
-            alreadyExistCheck(creditNumber);
+            String creditNumber = creditNumberField.getText();
+            String creditPin = new String(creditPinField.getPassword());
+            // checks
+            if (blankCheck(creditNumber, creditPin) == true) {
+                register(creditNumber, creditPin);
+            }
         });
     }
 
-    private void correctInfoCheck(String creditNumber, String creditPin, PanelManager manager) {
-        if (CreditCardManager.getCreditCardsInfo().containsKey(creditNumber)){
-            if (CreditCardManager.getCreditCardsInfo().get(creditNumber).equals(creditPin)){
-                manager.showPanel("AccountPage");
-            }
-            else {
-                showError("Wrong Password !");
-            }
-        }
-    }
-
-    private void alreadyExistCheck(String creditNumber) {
-        if (CreditCardManager.getCreditCardsInfo().isEmpty()){
+    private void register(String creditNumber, String creditPin) {
+        if (cardManager.register(creditNumber, creditPin) == false){
+            showError("CreditCard number already exist!");
             return;
         }
-        if (CreditCardManager.getCreditCardsInfo().containsKey(creditNumber)){
-            showError("Credit card number already exist!");
-        }
+        // successful msg
+        infoText.setForeground(Color.green);
+        infoText.setText("Register successful");
+        // empty the textFields
+        creditNumberField.setText("");
+        creditPinField.setText("");
+    }
 
+    private void correctInfoCheck(String creditNumber, String creditPin, PanelManager manager) {
+        if (cardManager.login(creditNumber,creditPin) == null){
+            showError("Invalid username or password!");
+            return;
+        }
+        manager.showPanel(AccountPage.KEY);
     }
 
     // checks if both fields are specified
-    private void blankCheck(String creditNumber, String creditPin) {
+    private Boolean blankCheck(String creditNumber, String creditPin) {
         if (creditNumber.isBlank() || creditPin.isBlank()){
             showError("Both fields must be specified!");
-
+            return false;
         }
+        return true;
     }
 
-    // passing to the infoLabel the error msg
+    // passing the error msg to the infoLabel
     private void showError(String msg) {
         infoText.setForeground(Color.red);
         infoText.setText(msg);

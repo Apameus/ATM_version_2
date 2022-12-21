@@ -58,7 +58,7 @@
               </component>
             </children>
           </grid>
-          <component id="147c" class="javax.swing.JLabel" binding="BalanceText">
+          <component id="147c" class="javax.swing.JLabel" binding="balanceText">
             <constraints>
               <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
