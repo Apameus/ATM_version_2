@@ -49,5 +49,35 @@ public class CreditCardManager {
         return null;
     }
 
+    /**
+     * Updates the balance of the current credit-card
+     * @param amount the amount that the user want to deposit
+     * @param card the specific credit-card
+     * @return true if the amount was added to the credit-card <b>or false if the amount was 0 or less</b>
+     */
+    public Boolean deposit(Double amount, CreditCard card){
+        if (amount <= 0) {
+            return false;
+        }
+        card.balance += amount;
+        return true;
+    }
 
+    /**
+     * Updates the balance of the current credit-card
+     * @param card the specific credit-card
+     * @param amount the amount that the user want to withdraw
+     * @return true if the amount was added to the credit-card <b>or false if the amount was 0 or less || if the amount is greater than the card balance</b>
+     */
+    public Boolean withdraw(CreditCard card, Double amount){
+        if (amount <= 0) {
+            return false;
+        }
+        if (card.balance < amount){
+            return false;
+        }
+        card.balance -= amount;
+        return true;
+
+    }
 }

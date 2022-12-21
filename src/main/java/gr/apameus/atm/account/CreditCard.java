@@ -1,9 +1,9 @@
 package gr.apameus.atm.account;
 
 public class CreditCard {
-    String creditCardNumber;
-    String pin;
-    Double balance;
+    public String creditCardNumber;
+    public String pin;
+    public Double balance;
 
     public CreditCard(String creditCardNumber, String pin, Double balance){
         this.creditCardNumber = creditCardNumber;

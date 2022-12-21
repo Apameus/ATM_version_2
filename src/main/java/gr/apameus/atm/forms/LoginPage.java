@@ -1,13 +1,14 @@
 package gr.apameus.atm.forms;
 
 import gr.apameus.atm.PanelManager;
+import gr.apameus.atm.account.CreditCard;
 import gr.apameus.atm.account.CreditCardManager;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class LoginPage {
-    private static final String KEY = "LoginPage";
+    public static final String KEY = "LoginPage";
     private JPanel mainPanel;
     private JPanel panel;
     private JTextField creditNumberField;
@@ -58,14 +59,26 @@ public class LoginPage {
     }
 
     private void correctInfoCheck(String creditNumber, String creditPin, PanelManager manager) {
-        if (cardManager.login(creditNumber,creditPin) == null){
+        CreditCard creditCard = cardManager.login(creditNumber, creditPin);
+        if (creditCard == null){
             showError("Invalid username or password!");
             return;
         }
+        // clear the fields
+        clear();
+        // get the specific account page
+        AccountPage accountPage = manager.getAccountPage();
+        // set the current credit-card
+        accountPage.setCreditCard(creditCard);
+        // set the labels
+        accountPage.refresh();
+        //
         manager.showPanel(AccountPage.KEY);
     }
 
-    // checks if both fields are specified
+    /**
+     * Checks if both fields are specified
+     */
     private Boolean blankCheck(String creditNumber, String creditPin) {
         if (creditNumber.isBlank() || creditPin.isBlank()){
             showError("Both fields must be specified!");
@@ -74,11 +87,21 @@ public class LoginPage {
         return true;
     }
 
-    // passing the error msg to the infoLabel
+    /**
+     * Passing the error message to the infoLabel
+     * @param msg the error message
+     */
     private void showError(String msg) {
         infoText.setForeground(Color.red);
         infoText.setText(msg);
     }
 
-
+    /**
+     * Clear all the fields & labels
+     */
+    private void clear(){
+        creditNumberField.setText("");
+        creditPinField.setText("");
+        infoText.setText("");
+    }
 }

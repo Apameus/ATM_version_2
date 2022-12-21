@@ -1,8 +1,8 @@
 package gr.apameus.atm;
 
+import gr.apameus.atm.account.CreditCard;
 import gr.apameus.atm.account.CreditCardManager;
-import gr.apameus.atm.forms.AccountPage;
-import gr.apameus.atm.forms.LoginPage;
+import gr.apameus.atm.forms.*;
 
 import javax.swing.*;
 import java.awt.*;
@@ -12,6 +12,12 @@ public class PanelManager {
     JPanel mainPanel;
     CardLayout layout;
 
+    LoginPage loginPage ;
+    AccountPage accountPage ;
+    DepositPage depositPage;
+    WithdrawPage withdrawPage;
+    TransferPage transferPage;
+
     public PanelManager(){
         frame = new JFrame();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -19,11 +25,18 @@ public class PanelManager {
         mainPanel = new JPanel(layout);
         frame.add(mainPanel);
 
-        LoginPage loginPage = new LoginPage(this);
-        AccountPage accountPage = new AccountPage(this);
-
+        loginPage = new LoginPage(this);
+        accountPage = new AccountPage(this);
+        depositPage = new DepositPage(this);
     }
 
+    public DepositPage getDepositPage() {
+        return depositPage;
+    }
+
+    public AccountPage getAccountPage() {
+        return accountPage;
+    }
 
     public void addPanel(JPanel panel, String KEY){
         mainPanel.add(panel, KEY);
@@ -37,5 +50,6 @@ public class PanelManager {
         frame.setSize(700,700);
         frame.setVisible(true);
     }
+
 
 }

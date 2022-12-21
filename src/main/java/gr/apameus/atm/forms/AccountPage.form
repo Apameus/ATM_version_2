@@ -82,7 +82,7 @@
               <text value="CreditCard Number: "/>
             </properties>
           </component>
-          <component id="679e8" class="javax.swing.JLabel" binding="creditcardNumberText">
+          <component id="679e8" class="javax.swing.JLabel" binding="creditCardNumberText">
             <constraints>
               <grid row="0" column="1" row-span="1" col-span="3" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
             </constraints>
