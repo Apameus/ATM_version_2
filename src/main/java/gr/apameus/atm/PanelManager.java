@@ -17,6 +17,7 @@ public class PanelManager {
     DepositPage depositPage;
     WithdrawPage withdrawPage;
     TransferPage transferPage;
+    CreditCardManager creditCardManager;
 
     public PanelManager(){
         frame = new JFrame();
@@ -25,11 +26,20 @@ public class PanelManager {
         mainPanel = new JPanel(layout);
         frame.add(mainPanel);
 
+        creditCardManager = new CreditCardManager();
         loginPage = new LoginPage(this);
         accountPage = new AccountPage(this);
         depositPage = new DepositPage(this);
         withdrawPage = new WithdrawPage(this);
         transferPage = new TransferPage(this);
+
+    }
+
+    public CreditCardManager getCreditCardManager(){
+        return creditCardManager;
+    }
+    public TransferPage getTransferPage() {
+        return transferPage;
     }
 
     public WithdrawPage getWithdrawPage() {

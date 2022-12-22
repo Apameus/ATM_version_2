@@ -21,7 +21,7 @@ public class DepositPage {
     //
 
     public DepositPage(PanelManager manager){
-        creditCardManager = new CreditCardManager();
+        creditCardManager = manager.getCreditCardManager();
         manager.addPanel(mainPanel, KEY);
 
         // buttons
@@ -31,17 +31,23 @@ public class DepositPage {
         });
 
         depositButton.addActionListener(e -> {
+            if (amountField.getText().isBlank()){
+                showError("Amount must be specified!");
+                return;
+            }
             Double amount = Double.valueOf(amountField.getText());
 
             if (creditCardManager.deposit(manager.getAccountPage().getCreditCard(), amount)){
                 clear();
                 refresh(manager.getAccountPage().getCreditCard());
                 manager.getAccountPage().refresh();
+                // successful msg
+                infoText.setForeground(Color.green);
+                infoText.setText("Deposit successful");
             }
             else {
                 // show error
-                infoText.setForeground(Color.red);
-                infoText.setText("Invalid amount!");
+                showError("Invalid amount!");
                 amountField.setText("");
             }
 
@@ -55,5 +61,9 @@ public class DepositPage {
 
     public void refresh(CreditCard card){
         balanceText.setText(String.valueOf(card.balance));
+    }
+    private void showError(String msg) {
+        infoText.setForeground(Color.red);
+        infoText.setText(msg);
     }
 }

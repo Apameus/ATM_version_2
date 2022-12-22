@@ -20,7 +20,7 @@ public class WithdrawPage {
     private CreditCardManager creditCardManager;
 
     public WithdrawPage(PanelManager manager){
-        creditCardManager = new CreditCardManager();
+        creditCardManager = manager.getCreditCardManager();
         manager.addPanel(mainPanel, KEY);
 
         // buttons
@@ -30,17 +30,23 @@ public class WithdrawPage {
         });
 
         withdrawButton.addActionListener(e -> {
+            if (amountField.getText().isBlank()){
+                showError("Amount must be specified!");
+                return;
+            }
             Double amount = Double.valueOf(amountField.getText());
 
             if (creditCardManager.withdraw(manager.getAccountPage().getCreditCard(), amount)){
                 clear();
                 refresh(manager.getAccountPage().getCreditCard());
                 manager.getAccountPage().refresh();
+                // successful msg
+                infoText.setForeground(Color.green);
+                infoText.setText("Withdraw successful");
             }
             else {
                 // show error
-                infoText.setForeground(Color.red);
-                infoText.setText("Invalid amount!");
+                showError("Invalid amount!");
                 amountField.setText("");
             }
         });
@@ -54,5 +60,10 @@ public class WithdrawPage {
     private void clear() {
         amountField.setText("");
         infoText.setText("");
+    }
+
+    private void showError(String msg) {
+        infoText.setForeground(Color.red);
+        infoText.setText(msg);
     }
 }

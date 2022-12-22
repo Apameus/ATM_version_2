@@ -5,6 +5,7 @@ import gr.apameus.atm.account.CreditCard;
 import gr.apameus.atm.account.CreditCardManager;
 
 import javax.swing.*;
+import java.awt.*;
 
 public class AccountPage {
     public static final String KEY = "AccountPage";
@@ -24,29 +25,53 @@ public class AccountPage {
     //
 
     public AccountPage(PanelManager manager){
-        creditCardManager = new CreditCardManager();
+        creditCardManager = manager.getCreditCardManager();
         manager.addPanel(mainPanel, KEY);
+
         // buttons
         logoutButton.addActionListener(e -> {
             manager.showPanel(LoginPage.KEY);
         });
-
+        // deposit
         depositButton.addActionListener(e -> {
             DepositPage depositPage = manager.getDepositPage();
             depositPage.refresh(creditCard);
             manager.showPanel(DepositPage.KEY);
         });
-
+        // withdraw
         withdrawButton.addActionListener(e -> {
+            // checks if the card balance is 0
+            if (zeroBalanceCheck()){
+                showError("Your balance is 0!");
+                return;
+            }
             WithdrawPage withdrawPage = manager.getWithdrawPage();
             withdrawPage.refresh(creditCard);
             manager.showPanel(WithdrawPage.KEY);
-        });
 
+        });
+        // transfer
         transferButton.addActionListener(e -> {
+            if (zeroBalanceCheck()){
+                showError("Your balance is 0!");
+                return;
+            }
+            TransferPage transferPage = manager.getTransferPage();
+            transferPage.refresh(creditCard);
             manager.showPanel(TransferPage.KEY);
         });
 
+    }
+
+    /**
+     * Checks if the credit-card balance is 0, so there is no reason to show the WithdrawPage
+     * @return true if the credit-card balance is 0, or false if it's not
+     */
+    private Boolean zeroBalanceCheck() {
+        if (creditCard.balance == 0){
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -69,5 +94,12 @@ public class AccountPage {
         creditCardNumberText.setText(creditCard.creditCardNumber);
         // show the creditCardBalance
         balanceText.setText(String.valueOf(creditCard.balance));
+        // clear the info field
+        infoText.setText("");
+    }
+
+    private void showError(String msg) {
+        infoText.setForeground(Color.red);
+        infoText.setText(msg);
     }
 }

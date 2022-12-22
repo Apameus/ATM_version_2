@@ -21,7 +21,7 @@ public class LoginPage {
 
     // constructor
     public LoginPage(PanelManager manager){
-        cardManager = new CreditCardManager();
+        cardManager = manager.getCreditCardManager();
         manager.addPanel(mainPanel, KEY);
 
         // loginButton
@@ -72,7 +72,7 @@ public class LoginPage {
         accountPage.setCreditCard(creditCard);
         // set the labels
         accountPage.refresh();
-        //
+        // show Account Page
         manager.showPanel(AccountPage.KEY);
     }
 

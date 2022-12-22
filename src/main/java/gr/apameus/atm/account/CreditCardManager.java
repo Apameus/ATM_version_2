@@ -78,6 +78,26 @@ public class CreditCardManager {
         }
         card.balance -= amount;
         return true;
+    }
 
+    /**
+     * Transfer the amount from one credit-card to another, and returns true
+     * @param card the specific credit-card who will transfer the amount
+     * @param transferTo the credit-card (number) that we want to receive the amount
+     * @param amount the amount we want to transfer
+     * @return true if the transfer is completed <b>or false if the amount was 0 or less || the credit-card-number wasn't found in the list </b>
+     */
+    public Boolean transfer(CreditCard card, String transferTo, Double amount){
+        if (amount <= 0){
+            return false;
+        }
+        for (CreditCard creditCard : creditCards) {
+            if (transferTo.equals(creditCard.creditCardNumber)){
+                card.balance -= amount;
+                creditCard.balance += amount;
+                return true;
+            }
+        }
+        return false;
     }
 }
