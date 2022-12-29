@@ -1,8 +1,8 @@
 package gr.apameus.atm.forms;
 
 import gr.apameus.atm.PanelManager;
-import gr.apameus.atm.account.CreditCard;
-import gr.apameus.atm.account.CreditCardManager;
+import gr.apameus.atm.creditCard.CreditCard;
+import gr.apameus.atm.creditCard.CreditCardManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,8 +18,8 @@ public class DepositPage {
     private JButton backButton;
     //
     CreditCardManager creditCardManager;
-    //
 
+    // constructor
     public DepositPage(PanelManager manager){
         creditCardManager = manager.getCreditCardManager();
         manager.addPanel(mainPanel, KEY);
@@ -37,9 +37,9 @@ public class DepositPage {
             }
             Double amount = Double.valueOf(amountField.getText());
 
-            if (creditCardManager.deposit(manager.getAccountPage().getCreditCard(), amount)){
+            if (creditCardManager.deposit(amount)){
                 clear();
-                refresh(manager.getAccountPage().getCreditCard());
+                refresh();
                 manager.getAccountPage().refresh();
                 // successful msg
                 infoText.setForeground(Color.green);
@@ -54,14 +54,25 @@ public class DepositPage {
         });
     }
 
+    /**
+     * Clear the text-field & the label.
+     */
     private void clear() {
         amountField.setText("");
         infoText.setText("");
     }
 
-    public void refresh(CreditCard card){
-        balanceText.setText(String.valueOf(card.balance));
+    /**
+     * Sets the credit-card balance label according to the current credit-card info.
+     */
+    public void refresh(){
+        balanceText.setText(String.valueOf(creditCardManager.getCurrent_balance()));
     }
+
+    /**
+     * Setting the message you passed in the info text with red color.
+     * @param msg the message you want to pass.
+     */
     private void showError(String msg) {
         infoText.setForeground(Color.red);
         infoText.setText(msg);

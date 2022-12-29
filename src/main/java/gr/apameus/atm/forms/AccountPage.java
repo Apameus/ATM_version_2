@@ -1,11 +1,13 @@
 package gr.apameus.atm.forms;
 
 import gr.apameus.atm.PanelManager;
-import gr.apameus.atm.account.CreditCard;
-import gr.apameus.atm.account.CreditCardManager;
+import gr.apameus.atm.creditCard.CreditCard;
+import gr.apameus.atm.creditCard.CreditCardManager;
+import gr.apameus.atm.server.Connection;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 public class AccountPage {
     public static final String KEY = "AccountPage";
@@ -20,22 +22,28 @@ public class AccountPage {
     private JLabel creditCardNumberText;
     private JLabel balanceText;
     //
-    private CreditCardManager creditCardManager;
     private CreditCard creditCard;
-    //
+    private double current_balance;
+    private CreditCardManager creditCardManager;
+    private Connection connection;
 
-    public AccountPage(PanelManager manager){
+    // constructor
+    public AccountPage(PanelManager manager) throws IOException {
+        // stupid stuff..
         creditCardManager = manager.getCreditCardManager();
-        manager.addPanel(mainPanel, KEY);
+        connection = creditCardManager.getConnection();
 
-        // buttons
+        manager.addPanel(mainPanel, KEY);
+        // buttons //
+        // logout
         logoutButton.addActionListener(e -> {
+            connection.send("logout,0");
             manager.showPanel(LoginPage.KEY);
         });
         // deposit
         depositButton.addActionListener(e -> {
             DepositPage depositPage = manager.getDepositPage();
-            depositPage.refresh(creditCard);
+            depositPage.refresh();
             manager.showPanel(DepositPage.KEY);
         });
         // withdraw
@@ -46,18 +54,18 @@ public class AccountPage {
                 return;
             }
             WithdrawPage withdrawPage = manager.getWithdrawPage();
-            withdrawPage.refresh(creditCard);
+            withdrawPage.refresh();
             manager.showPanel(WithdrawPage.KEY);
-
         });
         // transfer
         transferButton.addActionListener(e -> {
+            // checks if the card balance is 0
             if (zeroBalanceCheck()){
                 showError("Your balance is 0!");
                 return;
             }
             TransferPage transferPage = manager.getTransferPage();
-            transferPage.refresh(creditCard);
+            transferPage.refresh();
             manager.showPanel(TransferPage.KEY);
         });
 
@@ -68,7 +76,7 @@ public class AccountPage {
      * @return true if the credit-card balance is 0, or false if it's not
      */
     private Boolean zeroBalanceCheck() {
-        if (creditCard.balance == 0){
+        if (creditCardManager.getCurrent_balance() == 0){
             return true;
         }
         return false;
@@ -82,6 +90,9 @@ public class AccountPage {
         this.creditCard = creditCard;
     }
 
+    /**
+     * @return the current credit-card
+     */
     public CreditCard getCreditCard(){
         return creditCard;
     }
@@ -93,11 +104,14 @@ public class AccountPage {
         // show the creditCardNumber
         creditCardNumberText.setText(creditCard.creditCardNumber);
         // show the creditCardBalance
-        balanceText.setText(String.valueOf(creditCard.balance));
+        balanceText.setText(String.valueOf(creditCardManager.getCurrent_balance()));
         // clear the info field
         infoText.setText("");
     }
-
+    /**
+     * Setting the message you passed in the info text with red color.
+     * @param msg the message you want to pass.
+     */
     private void showError(String msg) {
         infoText.setForeground(Color.red);
         infoText.setText(msg);

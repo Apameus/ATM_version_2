@@ -1,11 +1,11 @@
 package gr.apameus.atm;
 
-import gr.apameus.atm.account.CreditCard;
-import gr.apameus.atm.account.CreditCardManager;
+import gr.apameus.atm.creditCard.CreditCardManager;
 import gr.apameus.atm.forms.*;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.IOException;
 
 public class PanelManager {
     JFrame frame;
@@ -19,7 +19,8 @@ public class PanelManager {
     TransferPage transferPage;
     CreditCardManager creditCardManager;
 
-    public PanelManager(){
+    // constructor
+    public PanelManager() throws IOException {
         frame = new JFrame();
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         layout = new CardLayout();
@@ -35,6 +36,7 @@ public class PanelManager {
 
     }
 
+    // getters
     public CreditCardManager getCreditCardManager(){
         return creditCardManager;
     }
@@ -54,14 +56,27 @@ public class PanelManager {
         return accountPage;
     }
 
-    public void addPanel(JPanel panel, String KEY){
-        mainPanel.add(panel, KEY);
+    // panel & frame methods
+    /**
+     * Adding the new panel to the main panel
+     * @param panel the new panel
+     * @param key the key of the new panel
+     */
+    public void addPanel(JPanel panel, String key){
+        mainPanel.add(panel, key);
     }
 
-    public void showPanel(String KEY){
-        layout.show(mainPanel, KEY);
+    /**
+     * Showing the specific panel of the main panel
+     * @param key the specific panel key
+     */
+    public void showPanel(String key){
+        layout.show(mainPanel, key);
     }
 
+    /**
+     * Showing the main frame
+     */
     public void showFrame(){
         frame.setSize(700,700);
         frame.setVisible(true);

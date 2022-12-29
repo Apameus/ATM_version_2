@@ -1,8 +1,8 @@
 package gr.apameus.atm.forms;
 
 import gr.apameus.atm.PanelManager;
-import gr.apameus.atm.account.CreditCard;
-import gr.apameus.atm.account.CreditCardManager;
+import gr.apameus.atm.creditCard.CreditCard;
+import gr.apameus.atm.creditCard.CreditCardManager;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,39 +25,49 @@ public class TransferPage {
         creditCardManager = manager.getCreditCardManager();
         manager.addPanel(mainPanel, KEY);
 
-        // buttons
+        // buttons //
+        // back
         backButton.addActionListener(e -> {
             clear();
             manager.getAccountPage().refresh();
             manager.showPanel(AccountPage.KEY);
         });
-
+        // transfer
         transferButton.addActionListener(e -> {
+            // check
             if (transferToField.getText().isBlank() || amountField.getText().isBlank()){
                 showError("Amount must be specified!");
                 return;
             }
             String transferTo = transferToField.getText();
             Double amount = Double.valueOf(amountField.getText());
-            creditCardManager.transfer(manager.getAccountPage().getCreditCard(), transferTo, amount);
-            refresh(manager.getAccountPage().getCreditCard());
+            creditCardManager.transfer(transferTo, amount);
+            refresh();
             clear();
             // successful msg
             infoText.setForeground(Color.green);
             infoText.setText("Transfer successful");
         });
     }
-
+    /**
+     * Clear all the fields & labels.
+     */
     private void clear() {
         amountField.setText("");
         transferToField.setText("");
         infoText.setText("");
     }
-
-    public void refresh(CreditCard card){
-        balanceText.setText(card.balance.toString());
+    /**
+     * <b>Sets the</b> credit-card balance <b>label</b> according to the current credit-card info.
+     */
+    public void refresh(){
+        balanceText.setText(String.valueOf(creditCardManager.getCurrent_balance()));
     }
 
+    /*
+     * Setting the message you passed in the info text with red color.
+     * @param msg the message you want to pass.
+     */
     private void showError(String msg) {
         infoText.setForeground(Color.red);
         infoText.setText(msg);
