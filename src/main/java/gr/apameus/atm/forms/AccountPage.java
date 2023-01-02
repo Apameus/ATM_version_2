@@ -3,7 +3,6 @@ package gr.apameus.atm.forms;
 import gr.apameus.atm.PanelManager;
 import gr.apameus.atm.creditCard.CreditCard;
 import gr.apameus.atm.creditCard.CreditCardManager;
-import gr.apameus.atm.server.Connection;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,20 +23,20 @@ public class AccountPage {
     //
     private CreditCard creditCard;
     private double current_balance;
-    private CreditCardManager creditCardManager;
-    private Connection connection;
+    private final CreditCardManager creditCardManager;
 
     // constructor
     public AccountPage(PanelManager manager) throws IOException {
-        // stupid stuff..
+
         creditCardManager = manager.getCreditCardManager();
-        connection = creditCardManager.getConnection();
+        //connection = creditCardManager.getConnection();
 
         manager.addPanel(mainPanel, KEY);
         // buttons //
         // logout
         logoutButton.addActionListener(e -> {
-            connection.send("logout,0");
+            //connection.send("logout,0");
+            creditCardManager.logout();
             manager.showPanel(LoginPage.KEY);
         });
         // deposit

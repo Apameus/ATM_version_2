@@ -1,33 +1,34 @@
 package gr.apameus.atm.creditCard;
 
-import gr.apameus.atm.server.Connection;
+import gr.apameus.atm.stream.Packet;
+import gr.apameus.atm.stream.PacketStream;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
 
 public final class CreditCardManager {
 
-    double current_balance = 0.0;
+    CreditCard current_creditCard;
 
-    private Socket socket;
-    private Connection connection;
-    private final List<CreditCard> creditCards;
+    private Packet exchange(Packet packet){
 
-    // constructor
-    public CreditCardManager() throws IOException {
-        socket = new Socket();
-        socket.connect(new InetSocketAddress(9999));
-        connection = new Connection(socket);
-        creditCards = new ArrayList<>();
+        // connect
+        try (Socket socket = new Socket("localhost",9999);
+            PacketStream stream = new PacketStream(socket.getInputStream(), socket.getOutputStream())) {
+
+            // send request
+            stream.send(packet);
+
+            // read response
+            return stream.receive();
+
+        } // close the connection
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public Connection getConnection() {
-        return connection;
-    }
+
 
     /**
      * <b>Saves a new credit-card</b> with the specified credit-card number and pin <b>in the server</b>
@@ -38,9 +39,15 @@ public final class CreditCardManager {
      * false if another credit-card is already registered
      * with the specified credit-card number
      */
+    @SuppressWarnings("all")
     public boolean register(String creditCardNumber, String creditCardPin){
-        connection.send(createTheLine(creditCardNumber,creditCardPin,"register"));
-        return Boolean.parseBoolean(connection.receive());
+        Packet packet = new Packet.RegisterPacket(creditCardNumber, creditCardPin);
+        Packet response = exchange(packet);
+        return switch (response){
+            case Packet.SuccessPacket(String msg) -> true;
+            case Packet.ErrorPacket(String msg) -> false;
+            default -> throw new IllegalStateException("Unexpected packet: " + response);
+        };
     }
 
     /**
@@ -50,14 +57,19 @@ public final class CreditCardManager {
      * @param cardPin the credit-card pin
      * @return the credit card <b>or null if the credit-card was not found</b>
      */
+    @SuppressWarnings("all")
     public CreditCard login(String cardNumber, String cardPin){
-        connection.send(createTheLine(cardNumber,cardPin,"login"));
-        if (Boolean.parseBoolean(connection.receive())){
-            current_balance = Double.valueOf(connection.receive());
-            CreditCard creditCard = new CreditCard(this,cardNumber,cardPin,current_balance);
-            return creditCard;
-        }
-        return null;
+       Packet packet = new Packet.LoginPacket(cardNumber, cardPin);
+       Packet response = exchange(packet);
+       return switch (response){
+           case Packet.CreditCardPacket(String creditCardNumber, String creditCardPin, Double balance) -> current_creditCard = new CreditCard(creditCardNumber, creditCardPin, balance);
+           case Packet.ErrorPacket(String msg) -> null;
+           default -> throw new IllegalStateException("Unexpected packet: " + response);
+       };
+    }
+
+    public void logout(){
+        current_creditCard = null;
     }
 
     /**
@@ -65,10 +77,18 @@ public final class CreditCardManager {
      * @param amount the amount that the user want to deposit
      * @return true if the amount was added to the credit-card <b>or false if the amount was 0 or less</b>
      */
+    @SuppressWarnings("all")
     public boolean deposit(Double amount){
-        connection.send(createTheLine("deposit", amount));
-        current_balance = Double.parseDouble(connection.receive());
-        return Boolean.parseBoolean(connection.receive());
+        Packet packet = new Packet.DepositPacket(current_creditCard.creditCardNumber, amount);
+        Packet response = exchange(packet);
+        return switch (response){
+            case Packet.BalancePacket(Double balance) -> {
+                current_creditCard.balance = balance;
+                yield true;
+            }
+            case Packet.ErrorPacket(String msg) -> false;
+            default -> throw new IllegalStateException("Unexpected value: " + response);
+        };
     }
 
     /**
@@ -76,10 +96,18 @@ public final class CreditCardManager {
      * @param amount the amount that the user want to withdraw
      * @return true if the amount was added to the credit-card <b>or false if the amount was 0 or less || if the amount is greater than the card balance</b>
      */
+    @SuppressWarnings("all")
     public boolean withdraw(Double amount){
-        connection.send(createTheLine("withdraw", amount));
-        current_balance = Double.parseDouble(connection.receive());
-        return Boolean.parseBoolean(connection.receive());
+        Packet packet = new Packet.WithdrawPacket(current_creditCard.creditCardNumber ,amount);
+        Packet response = exchange(packet);
+        return switch (response){
+            case Packet.BalancePacket(Double balance) -> {
+                current_creditCard.balance = balance;
+                yield true;
+            }
+            case Packet.ErrorPacket(String msg) -> false;
+            default -> throw new IllegalStateException("Unexpected value: " + response);
+        };
     }
 
     /**
@@ -88,28 +116,23 @@ public final class CreditCardManager {
      * @param amount the amount we want to transfer
      * @return true if the transfer is completed <b>or false if the amount was 0 or less || the credit-card-number wasn't found in the list </b>
      */
+    @SuppressWarnings("all")
     public boolean transfer(String transferTo, Double amount){
-        connection.send(createTheLine("transfer", amount));
-        connection.send(transferTo);
-        current_balance = Double.parseDouble(connection.receive());
-        return Boolean.parseBoolean(connection.receive());
+        Packet packet = new Packet.TransferPacket(current_creditCard.creditCardNumber ,transferTo, amount);
+        Packet response = exchange(packet);
+        return switch (response){
+            case Packet.BalancePacket(Double balance) -> {
+                current_creditCard.balance = balance;
+                yield true;
+            }
+            case Packet.ErrorPacket(String msg) -> false;
+            default -> throw new IllegalStateException("Unexpected value: " + response);
+        };
+        //current_balance
     }
 
     public double getCurrent_balance() {
-        return current_balance;
+        return current_creditCard.balance;
     }
 
-    String createTheLine(String cardNumber, String cardPin, String method){
-        StringJoiner joiner = new StringJoiner(",");
-        joiner.add(cardNumber);
-        joiner.add(cardPin);
-        joiner.add(method);
-        return joiner.toString();
-    }
-    String createTheLine(String method, double amount){
-        StringJoiner joiner = new StringJoiner(",");
-        joiner.add(method);
-        joiner.add(String.valueOf(amount));
-        return joiner.toString();
-    }
 }

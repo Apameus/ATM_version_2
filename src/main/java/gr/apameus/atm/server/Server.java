@@ -4,105 +4,146 @@ import gr.apameus.atm.creditCard.CreditCard;
 import gr.apameus.atm.creditCard.CreditCardManager;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import static gr.apameus.atm.stream.Packet.*;
+
 public class Server {
+
+    ServerSocket serverSocket;
+    List<CreditCard> creditCards;
+
+    Server() throws IOException {
+        serverSocket = new ServerSocket(9999);
+        creditCards = new ArrayList<>();
+    }
+
     public static void main(String[] args) throws IOException {
-        List<CreditCard> creditCards = new ArrayList<>();
-        CreditCardManager manager;
 
-        // create the server
-        ServerSocket serverSocket = new ServerSocket();
-        serverSocket.bind(new InetSocketAddress(9999));
+        Server server = new Server();
+        server.start();
 
-        // accept the connection
-        Socket socket = serverSocket.accept();
-        Connection connection = new Connection(socket);
+    }
 
-        while (socket.isConnected()) {
-            // create the panel manager
-            manager = new CreditCardManager();
+    
+    void start() {
+        while (serverSocket.isBound()){
 
-            // read the client message
-            /// ex. "Ioannis,Ioannis123,Register"
-            String receive = connection.receive();
+            // Accept
+            try (Socket socket = serverSocket.accept();
+                 PacketStream stream = PacketStream.forSocket(socket)){
 
-            System.out.println("receive = " + receive);
+                // Read request
+                var request = stream.receive();
 
-            // empty check
-            if (receive.isEmpty()) {
-                break;
-            }
+                // ... process request
+                Packet response = processRequest(request);
 
-            var attributes = receive.split(",");
-            String cardNumber = attributes[0];
-            String cardPin = attributes[1];
-            String action = attributes[2];
-
-            // respond
-            switch (action) {
-                case "register" -> {
-                    if (alreadyExistCheck(creditCards, connection, cardNumber)) continue;
-                    CreditCard card = new CreditCard(manager, cardNumber, cardPin, 0.0);
-                    creditCards.add(card);
-                    connection.send("true");
-                }
-                case "login" -> {
-                    // empty creditCardList check
-                    if (creditCards.isEmpty()) {
-                        connection.send("false");
-                        continue;
-                    }
-                    for (CreditCard currentCreditCard : creditCards) {
-                        if (currentCreditCard.creditCardNumber.equals(cardNumber) && currentCreditCard.pin.equals(cardPin)) {
-                            connection.send("true");
-                            connection.send(String.valueOf(currentCreditCard.balance));
-                            //
-                            label:
-                            while (true) {
-                                // read the secondary client message
-                                /// ex. "deposit,180"
-                                String receive2 = connection.receive();
-                                System.out.println("receive2 = " + receive2);
-
-                                String[] attributes2 = receive2.split(",");
-                                String method = attributes2[0];
-                                double amount = Double.parseDouble(attributes2[1]);
-
-                                if (amountCheck(amount)) break;
-
-                                switch (method) {
-                                    case "logout":
-                                        //currentCreditCard = null;
-                                        break label;
-                                    case "deposit":
-                                        deposit(connection, currentCreditCard, amount);
-                                        break;
-                                    case "withdraw":
-                                        withdraw(connection, currentCreditCard, amount);
-                                        break;
-                                    case "transfer":
-                                        transfer(creditCards, connection, currentCreditCard, amount);
-                                        break;
-                                    default:
-                                        connection.send("false");
-                                        break;
-                                }
-                            }
-                        } else {
-                            connection.send("false");
-                        }
-
-                    }
-                }
+                // Send response
+                stream.send(response);
+            } // Close connection
+            catch (IOException e){
+                e.printStackTrace();
             }
         }
-        connection.close();
-        serverSocket.close();
+    }
+
+    private Packet processRequest(Packet packet){
+
+        return switch (packet){
+            case RegisterPacket(String cardNumber, String cardPin) -> {
+                yield register(cardNumber, cardPin);
+            }
+            case LoginPacket(String cardNumber, String cardPin) -> {
+                yield login(cardNumber, cardPin);
+            }
+            case DepositPacket(String cardNumber, Double amount) -> {
+                yield deposit(cardNumber, amount);
+            }
+            case WithdrawPacket(String cardNumber, Double amount) -> {
+                yield withdraw(cardNumber, amount);
+            }
+            case TransferPacket(String cardNumber, String transferTo, Double amount) ->{
+                yield transfer(cardNumber, transferTo, amount);
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + packet);
+        };
+    }
+
+    private Packet transfer(String cardNumber, String transferTo, Double amount) {
+        var index = findCreditCardIndex(cardNumber);
+        var index2 = findCreditCardIndex(transferTo);
+        if (index != null && index2 != null){
+            creditCards.get(index).balance -= amount;
+            creditCards.get(index2).balance += amount;
+            return new BalancePacket(creditCards.get(index).balance);
+        }
+        return new ErrorPacket("Transfer failed!");
+    }
+
+    private Packet withdraw(String cardNumber, Double amount) {
+        var index = findCreditCardIndex(cardNumber);
+        if (index != null){
+            creditCards.get(index).balance -= amount;
+            return new BalancePacket(creditCards.get(index).balance);
+        }
+        return new ErrorPacket("Deposit unsuccessful");
+    }
+
+    private Packet deposit(String cardNumber, Double amount) {
+        var index = findCreditCardIndex(cardNumber);
+        if (index != null){
+            creditCards.get(index).balance += amount;
+            return new BalancePacket(creditCards.get(index).balance);
+        }
+        return new ErrorPacket("Deposit unsuccessful");
+    }
+
+    private Packet register(String cardNumber, String cardPin) {
+        if (!alreadyExistCheck(cardNumber)){
+            creditCards.add(new CreditCard(cardNumber, cardPin, 0));
+            return new SuccessPacket("Account registered!");
+        }
+        return new ErrorPacket("CardNumber already exist!");
+    }
+
+
+    private Packet login(String cardNumber, String cardPin) {
+        CreditCard card = findCreditCard(cardNumber, cardPin);
+        if (card != null){
+            return new CreditCardPacket(cardNumber, cardPin, card.balance);
+        }
+        return new ErrorPacket("Invalid username or password!");
+    }
+
+
+    /**
+     * Searches for a specific credit card with the specified
+     * creditCardNumber & pin and returns it, or else it returns null
+     * @param creditCardNumber the credit card number
+     * @param pin the pin
+     * @return the creditCard or null.
+     */
+    private CreditCard findCreditCard(String creditCardNumber, String pin) {
+        for (CreditCard creditCard : creditCards) {
+            if (creditCardNumber.equals(creditCard.creditCardNumber) && pin.equals(creditCard.pin)){
+                return creditCard;
+            }
+        }
+        return null;
+    }
+    private Integer findCreditCardIndex(String creditCardNumber) {
+        var i = -1;
+        for (CreditCard creditCard : creditCards) {
+            i++;
+            if (creditCardNumber.equals(creditCard.creditCardNumber)){
+                return i;
+            }
+        }
+        return null;
     }
 
     private static Boolean amountCheck(double amount) {
@@ -120,41 +161,8 @@ public class Server {
                     return true;
                 }
             }
-        }
         return false;
     }
 
-    private static void transfer(List<CreditCard> creditCards, Connection connection, CreditCard currentCreditCard, double amount) {
-        String transferTo = connection.receive();
-        // amount is greater than card balance
-        if (amount > currentCreditCard.balance){
-            connection.send(String.valueOf(currentCreditCard.balance));
-            connection.send("false");
-        }
-        currentCreditCard.balance -= amount;
-        for (CreditCard card : creditCards) {
-            if (card.creditCardNumber.equals(transferTo)) {
-                card.balance += amount;
-            }
-        }
-        connection.send(String.valueOf(currentCreditCard.balance));
-        connection.send("true");
-    }
 
-    private static void withdraw(Connection connection, CreditCard currentCreditCard, double amount) {
-        // amount is greater than the card's balance
-        if (amount > currentCreditCard.balance){
-            connection.send(String.valueOf(currentCreditCard.balance));
-            connection.send("false");
-        }
-        currentCreditCard.balance -= amount;
-        connection.send(String.valueOf(currentCreditCard.balance));
-        connection.send("true");
-    }
-
-    private static void deposit(Connection connection, CreditCard currentCreditCard, double amount) {
-        currentCreditCard.balance += amount;
-        connection.send(String.valueOf(currentCreditCard.balance));
-        connection.send("true");
-    }
 }
