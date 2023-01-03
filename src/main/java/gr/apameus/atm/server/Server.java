@@ -16,11 +16,13 @@ public class Server {
     ServerSocket serverSocket;
     List<CreditCard> creditCards;
 
+    // contractor
     Server() throws IOException {
         serverSocket = new ServerSocket(9999);
         creditCards = new ArrayList<>();
     }
 
+    // main method (runnable)
     public static void main(String[] args) throws IOException {
 
         Server server = new Server();
@@ -28,7 +30,9 @@ public class Server {
 
     }
 
-    
+    /**
+     * Starts a new request - response connection.
+     */
     void start() {
         while (serverSocket.isBound()){
 
@@ -51,6 +55,11 @@ public class Server {
         }
     }
 
+    /**
+     * Call the needed method according to the passed packet.
+     * @param packet the packet.
+     * @return the analogous packet in every situation.
+     */
     private Packet processRequest(Packet packet){
 
         return switch (packet){
@@ -73,6 +82,13 @@ public class Server {
         };
     }
 
+    /**
+     * <b>Deducts</b> the amount from the card's balance specified by card number, and <b>increase</b> the balance of the other card also specified by number (transferTo).
+     * @param cardNumber the credit-card number.
+     * @param transferTo the credit-card number of the receiver.
+     * @param amount the amount to be transferred.
+     * @return Balance-Packet if amount was transferred successfully, or Error-Packet if not.
+     */
     private Packet transfer(String cardNumber, String transferTo, Double amount) {
         var index = findCreditCardIndex(cardNumber);
         var index2 = findCreditCardIndex(transferTo);
@@ -84,6 +100,12 @@ public class Server {
         return new ErrorPacket("Transfer failed!");
     }
 
+    /**
+     * Updates the balance of the credit-card specified by the card number.
+     * @param cardNumber the card number.
+     * @param amount the amount to be withdrawn.
+     * @return Balance-Packet if amount was deducted successfully, else Error-Packet.
+     */
     private Packet withdraw(String cardNumber, Double amount) {
         var index = findCreditCardIndex(cardNumber);
         if (index != null){
@@ -93,6 +115,12 @@ public class Server {
         return new ErrorPacket("Deposit unsuccessful");
     }
 
+    /**
+     * Updates the balance of the credit-card specified by the card number.
+     * @param cardNumber the card number.
+     * @param amount the amount to be deposited.
+     * @return Balance-Packet if amount was added successfully, else Error-Packet.
+     */
     private Packet deposit(String cardNumber, Double amount) {
         var index = findCreditCardIndex(cardNumber);
         if (index != null){
@@ -102,6 +130,14 @@ public class Server {
         return new ErrorPacket("Deposit unsuccessful");
     }
 
+    /**
+     * <b>Saves a new credit-card</b> with the specified credit-card number and pin.
+     * @param cardNumber the credit-card number.
+     * @param cardPin the credit-card pin.
+     * @return Success-Packet if the registration was successful or
+     *       Error-Packet if another credit-card is already registered
+     *       with the specified credit-card number
+     */
     private Packet register(String cardNumber, String cardPin) {
         if (!alreadyExistCheck(cardNumber)){
             creditCards.add(new CreditCard(cardNumber, cardPin, 0));
@@ -110,7 +146,12 @@ public class Server {
         return new ErrorPacket("CardNumber already exist!");
     }
 
-
+    /**
+     * Locates a credit with the specified card number & pin and returns the analogous packet.
+     * @param cardNumber the credit-card number.
+     * @param cardPin the credit-card pin
+     * @return CreditCard-Packet if a credit-card with the specific number & pin was found, or Error-Packet if else.
+     */
     private Packet login(String cardNumber, String cardPin) {
         CreditCard card = findCreditCard(cardNumber, cardPin);
         if (card != null){
@@ -135,6 +176,11 @@ public class Server {
         }
         return null;
     }
+
+    /**
+     * @param creditCardNumber
+     * @return the index of the specified card number in the list, <b>or null if none.</b>
+     */
     private Integer findCreditCardIndex(String creditCardNumber) {
         var i = -1;
         for (CreditCard creditCard : creditCards) {
@@ -146,15 +192,11 @@ public class Server {
         return null;
     }
 
-    private static Boolean amountCheck(double amount) {
-        if (amount >= 0){
-            return false;
-        }
-        return true;
-    }
-
-    private static boolean alreadyExistCheck(List<CreditCard> creditCards, Connection connection, String cardNumber) {
-        if (!creditCards.isEmpty()) {
+    /**
+     * @param cardNumber
+     * @return true if another card exist with the specified card number, else false.
+     */
+    private boolean alreadyExistCheck(String cardNumber) {
             for (CreditCard card : creditCards) {
                 if (card.creditCardNumber.equals(cardNumber)) {
                     connection.send("false");

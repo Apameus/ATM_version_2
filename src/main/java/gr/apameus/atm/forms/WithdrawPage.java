@@ -36,7 +36,13 @@ public class WithdrawPage {
                 showError("Amount must be specified!");
                 return;
             }
-            Double amount = Double.valueOf(amountField.getText());
+            double amount = Double.parseDouble(amountField.getText());
+            if (amount <= 0 || amount > creditCardManager.getCurrent_balance()){
+                showError("Invalid amount!");
+                amountField.setText("");
+                return;
+            }
+
             // check
             if (creditCardManager.withdraw(amount)){
                 clear();

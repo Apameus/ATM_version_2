@@ -31,13 +31,11 @@ public final class CreditCardManager {
 
 
     /**
-     * <b>Saves a new credit-card</b> with the specified credit-card number and pin <b>in the server</b>
+     * Sends a <b>register request</b> to the server with the specified card number & pin.
      *
      * @param creditCardNumber the credit-card number
      * @param creditCardPin the credit-card pin
-     * @return true if the registration was successful or
-     * false if another credit-card is already registered
-     * with the specified credit-card number
+     * @return <b>true</b> if the server responde with CreditCard-Packet, <b>or null</b> if the server responde with Error-Packet.
      */
     @SuppressWarnings("all")
     public boolean register(String creditCardNumber, String creditCardPin){
@@ -51,11 +49,10 @@ public final class CreditCardManager {
     }
 
     /**
-     *  Locates a credit with the specified cardNumber and pin and returns it
-     *
+     * Sends a <b>login request</b> to the server with the specified card number & pin.
      * @param cardNumber the credit-card number
      * @param cardPin the credit-card pin
-     * @return the credit card <b>or null if the credit-card was not found</b>
+     * @return <b>the new current credit-card </b>if the server responde with CreditCard-Packet, <b>or null</b> if the server responde with Error-Packet.
      */
     @SuppressWarnings("all")
     public CreditCard login(String cardNumber, String cardPin){
@@ -73,9 +70,9 @@ public final class CreditCardManager {
     }
 
     /**
-     * Updates the balance of the current credit-card
-     * @param amount the amount that the user want to deposit
-     * @return true if the amount was added to the credit-card <b>or false if the amount was 0 or less</b>
+     * Send request to the server to update the balance of the current credit-card.
+     * @param amount the amount that the user want to deposit.
+     * @return <b>true</b> if the server responde with a Balance-Packet <b>or false</b> the server responde with a Error-Packet.
      */
     @SuppressWarnings("all")
     public boolean deposit(Double amount){
@@ -92,9 +89,9 @@ public final class CreditCardManager {
     }
 
     /**
-     * Updates the balance of the current credit-card
+     * Send request to the server to update the balance of the current credit-card.
      * @param amount the amount that the user want to withdraw
-     * @return true if the amount was added to the credit-card <b>or false if the amount was 0 or less || if the amount is greater than the card balance</b>
+     * @return <b>true</b> if the amount was added to the credit-card <b>or false</b> if the amount was 0 or less or if the amount is greater than the card balance
      */
     @SuppressWarnings("all")
     public boolean withdraw(Double amount){
@@ -111,10 +108,10 @@ public final class CreditCardManager {
     }
 
     /**
-     * Transfer the amount from one credit-card to another, and returns true
+     * Send request to the server to transfer the amount from one credit-card to another.
      * @param transferTo the credit-card (number) that we want to receive the amount
      * @param amount the amount we want to transfer
-     * @return true if the transfer is completed <b>or false if the amount was 0 or less || the credit-card-number wasn't found in the list </b>
+     * @return <b>true</b> if the server responde with a Balance-Packet <b>or false</b> if the server responde with a Error-Packet.
      */
     @SuppressWarnings("all")
     public boolean transfer(String transferTo, Double amount){
@@ -128,9 +125,11 @@ public final class CreditCardManager {
             case Packet.ErrorPacket(String msg) -> false;
             default -> throw new IllegalStateException("Unexpected value: " + response);
         };
-        //current_balance
     }
 
+    /**
+     * @return The balance of the current credit-card.
+     */
     public double getCurrent_balance() {
         return current_creditCard.balance;
     }

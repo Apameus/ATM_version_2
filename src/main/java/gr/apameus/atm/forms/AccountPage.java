@@ -26,7 +26,7 @@ public class AccountPage {
     private final CreditCardManager creditCardManager;
 
     // constructor
-    public AccountPage(PanelManager manager) throws IOException {
+    public AccountPage(PanelManager manager) {
 
         creditCardManager = manager.getCreditCardManager();
         //connection = creditCardManager.getConnection();
@@ -71,8 +71,8 @@ public class AccountPage {
     }
 
     /**
-     * Checks if the credit-card balance is 0, so there is no reason to show the WithdrawPage
-     * @return true if the credit-card balance is 0, or false if it's not
+     * Checks if the credit-card balance is 0, so there is no reason to show the WithdrawPage.
+     * @return true if the credit-card balance is 0, or false if it's not.
      */
     private Boolean zeroBalanceCheck() {
         if (creditCardManager.getCurrent_balance() == 0){
@@ -82,22 +82,16 @@ public class AccountPage {
     }
 
     /**
-     * Sets the current credit-card
+     * Sets the current credit-card.
      * @param creditCard
      */
     public void setCreditCard(CreditCard creditCard) {
         this.creditCard = creditCard;
     }
 
-    /**
-     * @return the current credit-card
-     */
-    public CreditCard getCreditCard(){
-        return creditCard;
-    }
 
     /**
-     * <b>Sets the</b> credit-card number & balance <b>labels</b> according to the current credit-card info
+     * <b>Sets the</b> credit-card number & balance <b>labels</b> according to the current credit-card info.
      */
     public void refresh() {
         // show the creditCardNumber

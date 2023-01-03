@@ -40,13 +40,25 @@ public class TransferPage {
                 return;
             }
             String transferTo = transferToField.getText();
-            Double amount = Double.valueOf(amountField.getText());
-            creditCardManager.transfer(transferTo, amount);
-            refresh();
-            clear();
-            // successful msg
-            infoText.setForeground(Color.green);
-            infoText.setText("Transfer successful");
+            double amount = Double.parseDouble(amountField.getText());
+            if (amount <= 0 || amount > creditCardManager.getCurrent_balance()){
+                showError("Invalid amount!");
+                transferToField.setText("");
+                amountField.setText("");
+                return;
+            }
+
+            if (creditCardManager.transfer(transferTo, amount)) {
+                refresh();
+                clear();
+                // successful msg
+                infoText.setForeground(Color.green);
+                infoText.setText("Transfer successful");
+            }
+            else {
+                showError("Transfer unsuccessful!");
+                amountField.setText("");
+            }
         });
     }
     /**
@@ -64,7 +76,7 @@ public class TransferPage {
         balanceText.setText(String.valueOf(creditCardManager.getCurrent_balance()));
     }
 
-    /*
+    /**
      * Setting the message you passed in the info text with red color.
      * @param msg the message you want to pass.
      */

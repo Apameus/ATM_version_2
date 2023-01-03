@@ -35,7 +35,12 @@ public class DepositPage {
                 showError("Amount must be specified!");
                 return;
             }
-            Double amount = Double.valueOf(amountField.getText());
+            double amount = Double.parseDouble(amountField.getText());
+            if (amount <= 0){
+                showError("Amount must be greater than 0!");
+                amountField.setText("");
+                return;
+            }
 
             if (creditCardManager.deposit(amount)){
                 clear();
