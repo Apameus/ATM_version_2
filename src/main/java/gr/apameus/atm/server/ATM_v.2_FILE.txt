@@ -1,0 +1,16 @@
+Credit_Card_Number: 123
+Pin: 123
+Balance: 120.0
+
+Credit_Card_Number: 321
+Pin: 321
+Balance: 8.0
+
+Credit_Card_Number: 1234
+Pin: 1234
+Balance: 2.0
+
+Credit_Card_Number: 12345
+Pin: 12345
+Balance: 70.0
+

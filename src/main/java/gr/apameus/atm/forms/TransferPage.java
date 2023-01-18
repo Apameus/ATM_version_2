@@ -36,7 +36,7 @@ public class TransferPage {
         transferButton.addActionListener(e -> {
             // check
             if (transferToField.getText().isBlank() || amountField.getText().isBlank()){
-                showError("Amount must be specified!");
+                showError("Both fields must be specified!");
                 return;
             }
             String transferTo = transferToField.getText();
@@ -56,7 +56,8 @@ public class TransferPage {
                 infoText.setText("Transfer successful");
             }
             else {
-                showError("Transfer unsuccessful!");
+                showError("Card number doesn't exist!");
+                transferToField.setText("");
                 amountField.setText("");
             }
         });

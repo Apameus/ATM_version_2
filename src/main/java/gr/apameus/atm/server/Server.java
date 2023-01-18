@@ -1,12 +1,16 @@
 package gr.apameus.atm.server;
 
 import gr.apameus.atm.creditCard.CreditCard;
-import gr.apameus.atm.creditCard.CreditCardManager;
+import gr.apameus.atm.stream.Packet;
+import gr.apameus.atm.stream.PacketStream;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static gr.apameus.atm.stream.Packet.*;
@@ -26,14 +30,14 @@ public class Server {
     public static void main(String[] args) throws IOException {
 
         Server server = new Server();
-        server.start();
+        server.startLocal();
 
     }
 
     /**
      * Starts a new request - response connection.
      */
-    void start() {
+    void startSocket() {
         while (serverSocket.isBound()){
 
             // Accept
@@ -52,6 +56,107 @@ public class Server {
             catch (IOException e){
                 e.printStackTrace();
             }
+        }
+    }
+
+    /**
+     * Starts a new request - response connection, with local disk operations.
+     */
+    void startLocal() {
+        // Parse the file **
+        creditCards = parse();
+
+        while (serverSocket.isBound()){
+
+            // Accept
+            try (Socket socket = serverSocket.accept();
+                 PacketStream stream = PacketStream.forSocket(socket)){
+
+                // Read request
+                var request = stream.receive();
+
+                // ... process request
+                Packet response = processRequest(request);
+
+                // Send response
+                stream.send(response);
+
+                // Serialize **
+                serialize(creditCards);
+            } // Close connection
+            catch (IOException e){
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void serialize(List<CreditCard> creditCards) {
+        List<String> lines = new ArrayList<>();
+        for (var creditCard : creditCards){
+            String line =  "Credit_Card_Number: " + creditCard.creditCardNumber + "\n" +
+                    "Pin: " + creditCard.pin + "\n" +
+                    "Balance: " + creditCard.balance + "\n" ;
+            lines.add(line);
+
+        }
+        saveToFile(lines);
+    }
+
+    private void saveToFile(List<String> lines) {
+        try {
+            Files.write(Path.of("C:\\Users\\Ιωάννης Τζωρτζίνης\\IdeaProjects\\ATM_version_2\\src\\main\\java\\gr\\apameus\\atm\\server\\ATM_v.2_FILE.txt"),lines);
+        }
+        catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+
+    private List<CreditCard> parse() {
+        List<String> lines = getAllLines();
+        lines.removeAll(Collections.singleton(""));
+        for (int linesPassed = 0; lines.size() > linesPassed; linesPassed += 3){
+            var number = getNumber(lines.get(linesPassed));
+            var pin = getPin(lines.get(linesPassed + 1));
+            var balance = getBalance(lines.get(linesPassed + 2));
+            CreditCard creditCard = new CreditCard(number, pin, balance);
+            creditCards.add(creditCard);
+        }
+        return creditCards;
+    }
+
+    private Double getBalance(String line) {
+        if (line.startsWith("Balance:")){
+            var lineOf = line.split(" ");
+            var balance = Double.parseDouble(lineOf[1]);
+            return balance;
+        }
+        throw new IllegalArgumentException("Something went wrong in getBalance method");
+    }
+
+    private String getPin(String line) {
+        if (line.startsWith("Pin:")){
+            var lineOf = line.split(" ");
+            var pin = lineOf[1];
+            return pin;
+        }
+        throw new IllegalArgumentException("Something went wrong in getPin method");
+    }
+
+    private String getNumber(String line) {
+        if (line.startsWith("Credit_Card_Number:")){
+            var lineOf = line.split(" ");
+            var number = lineOf[1];
+            return number;
+        }
+        throw new IllegalArgumentException("Something went wrong in getNumber method");
+    }
+
+    private List<String> getAllLines() {
+        try {
+            return Files.readAllLines(Path.of("C:\\Users\\Ιωάννης Τζωρτζίνης\\IdeaProjects\\ATM_version_2\\src\\main\\java\\gr\\apameus\\atm\\server\\ATM_v.2_FILE.txt"));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -141,6 +246,9 @@ public class Server {
     private Packet register(String cardNumber, String cardPin) {
         if (!alreadyExistCheck(cardNumber)){
             creditCards.add(new CreditCard(cardNumber, cardPin, 0));
+            //**
+
+            //**
             return new SuccessPacket("Account registered!");
         }
         return new ErrorPacket("CardNumber already exist!");
@@ -199,7 +307,6 @@ public class Server {
     private boolean alreadyExistCheck(String cardNumber) {
             for (CreditCard card : creditCards) {
                 if (card.creditCardNumber.equals(cardNumber)) {
-                    connection.send("false");
                     return true;
                 }
             }

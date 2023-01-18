@@ -28,8 +28,6 @@ public final class CreditCardManager {
         }
     }
 
-
-
     /**
      * Sends a <b>register request</b> to the server with the specified card number & pin.
      *
